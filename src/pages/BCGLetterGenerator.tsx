@@ -38,6 +38,7 @@ export function BCGLetterGenerator() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedLetter, setGeneratedLetter] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const validateStep = (step: number): boolean => {
@@ -96,17 +97,41 @@ export function BCGLetterGenerator() {
     }
   };
 
-  const generateLetter = () => {
+  const generateLetter = async () => {
     if (!validateStep(currentStep)) {
       return;
     }
 
-    setIsGenerating(true);
+    try {
+      setIsGenerating(true);
+      setGenerateError(null);
 
-    // Generate the letter based on the form data
-    const letter = generateLetterContent(formData);
-    setGeneratedLetter(letter);
-    setIsGenerating(false);
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-bcg-letter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Hiba a levél generálásakor: ${errorData.error || response.statusText}`);
+      }
+
+      const result = await response.json();
+      setGeneratedLetter(result.candidates[0].content.parts[0].text);
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Ismeretlen hiba történt');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSave = () => {
+    // Placeholder for save functionality
+    console.log('Mentés funkció még nem implementált');
   };
 
   const handleLogout = async () => {
@@ -191,12 +216,20 @@ export function BCGLetterGenerator() {
             )}
           </div>
 
+          {generateError && (
+            <div className="px-6 pb-4">
+              <div className="rounded-md bg-red-50 p-4">
+                <p className="text-sm text-red-700">{generateError}</p>
+              </div>
+            </div>
+          )}
+
           <NavigationFooter
             currentStep={currentStep}
             totalSteps={STEPS.length}
             onPrevious={handlePrevious}
             onNext={currentStep === STEPS.length ? generateLetter : handleNext}
-            onSave={() => {}}
+            onSave={handleSave}
             isValid={Object.keys(errors).length === 0}
             isSubmitting={isGenerating}
           />
@@ -204,93 +237,4 @@ export function BCGLetterGenerator() {
       </div>
     </div>
   );
-}
-
-function generateLetterContent(data: BCGFormData): string {
-  const currentDate = new Date().toLocaleDateString('hu-HU');
-  
-  // Header with recipients
-  let header = `${data.hospitalName}\n`;
-  if (data.recipients.includes('director')) {
-    header += `Főigazgató Úr/Asszony részére\n`;
-  }
-  if (data.recipients.includes('headOfObstetrics')) {
-    header += `Szülészeti Osztály Osztályvezető Főorvosa részére\n`;
-  }
-  if (data.recipients.includes('headOfNeonatology')) {
-    header += `Újszülött Osztály Osztályvezető Főorvosa részére\n`;
-  }
-  
-  header += `\n${currentDate}\n\n`;
-  
-  // Subject
-  const childInfo = data.childName ? data.childName : `${data.birthDate}-án/én született gyermek`;
-  const subject = `Tárgy: BCG oltás ${data.refusalType === 'deferral' ? 'elhalasztása' : 'visszautasítása'} - ${childInfo}\n\n`;
-  
-  // Opening
-  let opening = `Tisztelt Főigazgató Úr/Asszony!\nTisztelt Osztályvezető Főorvos Úr/Asszony!\n\n`;
-  opening += `Alulírott ${data.parentNames}, mint ${data.childName || 'a fent említett gyermek'} szülője/szülői, `;
-  
-  // Core statement based on refusal type
-  if (data.refusalType === 'deferral') {
-    opening += `ezúton kérem/kérjük az újszülött BCG oltásának elhalasztását.\n\n`;
-  } else {
-    opening += `ezúton visszavonhatatlanul visszautasítjuk az újszülött BCG oltását.\n\n`;
-  }
-  
-  // Reasoning section
-  let reasoning = `Döntésünk indokai:\n\n`;
-  
-  if (data.reasons.includes('immuneSystem')) {
-    reasoning += `• Az újszülött éretlen immunrendszerének kímélete: Az újszülött immunrendszere még nem teljesen kifejlett, ezért különös óvatossággal kell eljárni minden beavatkozás esetén.\n\n`;
-  }
-  
-  if (data.reasons.includes('conscience')) {
-    reasoning += `• Lelkiismereti és világnézeti meggyőződés: Mélyen átgondolt világnézeti és lelkiismereti okokból hozzuk meg ezt a döntést.\n\n`;
-  }
-  
-  if (data.reasons.includes('selfDetermination')) {
-    reasoning += `• Tájékozott beleegyezésen alapuló önrendelkezési jog: Az Alaptörvény és az egészségügyi törvény értelmében jogunk van a tájékozott döntéshozatalhoz és az orvosi beavatkozások visszautasításához.\n\n`;
-  }
-  
-  if (data.reasons.includes('familyHistory')) {
-    reasoning += `• Családi kórtörténet miatti óvatosság: A családi kórtörténetben előforduló autoimmun betegségek és egyéb egészségügyi problémák miatt fokozott óvatossággal járunk el.\n\n`;
-  }
-  
-  if (data.reasons.includes('unlawfulDetention')) {
-    reasoning += `• Jogellenes visszatartás elkerülése: Felhívjuk figyelmüket, hogy a gyermek és az anya oltás miatti visszatartása jogellenes és jogi következményekkel járhat.\n\n`;
-  }
-  
-  if (data.customReason.trim()) {
-    reasoning += `• ${data.customReason.trim()}\n\n`;
-  }
-  
-  // Tone-specific content
-  let toneContent = '';
-  if (data.letterTone === 'cooperative') {
-    toneContent = `Bízva az Önök megértésében és partnerségében, kérjük döntésünk tiszteletben tartását. Együttműködésre törekszünk minden további kérdésben.\n\n`;
-  } else if (data.letterTone === 'formal') {
-    toneContent = `Hivatkozva az egészségügyi törvény vonatkozó rendelkezéseire, kérjük döntésünk hivatalos tudomásul vételét és dokumentálását.\n\n`;
-  } else if (data.letterTone === 'confrontational') {
-    toneContent = `Felszólítjuk Önöket döntésünk azonnali tiszteletben tartására. Figyelmeztetjük, hogy jogellenes fogvatartás vagy kényszerítés esetén jogi lépéseket teszünk.\n\n`;
-  }
-  
-  // Declarations
-  let declarations = '';
-  if (data.declarations.includes('responsibilityForDeferral') || data.refusalType === 'deferral') {
-    declarations += `Nyilatkozom/Nyilatkozunk, hogy a későbbi oltás felelősségteljes pótlásáról gondoskodni fogunk.\n\n`;
-  }
-  
-  if (data.declarations.includes('awarenessOfConsequences')) {
-    declarations += `Tudomásul vesszük a döntésünkből eredő lehetséges hatósági következményeket.\n\n`;
-  }
-  
-  if (data.declarations.includes('requestForDocumentation')) {
-    declarations += `Kérjük döntésünk hivatalos dokumentálását a kórházi nyilvántartásban.\n\n`;
-  }
-  
-  // Closing
-  const closing = `Tisztelettel:\n\n${data.parentNames}\n(szülő/szülők aláírása)`;
-  
-  return header + subject + opening + reasoning + toneContent + declarations + closing;
 }

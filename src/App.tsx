@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Login } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
 import { FormPage } from './pages/FormPage';
 import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 
@@ -11,7 +12,7 @@ function App() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
-        navigate('/form');
+        navigate('/dashboard');
       } else if (event === 'SIGNED_OUT') {
         navigate('/login');
       }
@@ -21,6 +22,14 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/form"
         element={
@@ -37,7 +46,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

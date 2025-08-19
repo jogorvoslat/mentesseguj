@@ -36,7 +36,7 @@ export const BCGResultPage: React.FC<BCGResultPageProps> = ({ content, onBack })
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="mr-2 h-5 w-5" />
-            Vissza a generátorhoz
+            Vissza a főoldalra
           </button>
           <div className="flex gap-4">
             <button

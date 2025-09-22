@@ -13,6 +13,7 @@ import { Attachments } from '../components/FormSteps/Attachments';
 import { ResultPage } from '../components/ResultPage';
 import { ClipboardList } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { Navbar } from '../components/Navbar';
 
 const STEPS: FormStep[] = [
   { id: 1, title: 'I. Alapvető Információk' },
@@ -62,7 +63,123 @@ export function FormPage() {
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const navigate = useNavigate();
 
-  const validateStep = (step: number): boolean => {
+  if (analysisResult) {
+    return (
+      <ResultPage
+        content={analysisResult}
+        onBack={() => setAnalysisResult(null)}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Oltási Mentesség Kérelem
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Töltse ki a részletes űrlapot a mentességi kérelem generálásához
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <StepIndicator
+              steps={STEPS.map((step) => ({
+                ...step,
+                isCompleted: completedSteps.includes(step.id),
+              }))}
+              currentStep={currentStep}
+              onStepClick={setCurrentStep}
+            />
+          </div>
+
+          <div className="rounded-lg bg-white shadow">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <h2 className="text-lg font-medium text-gray-900">
+                {STEPS[currentStep - 1].title}
+              </h2>
+            </div>
+
+            <div className="px-6 py-6">
+              {currentStep === 1 && (
+                <BasicInformation
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 2 && (
+                <CurrentVaccination
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 3 && (
+                <PreviousReactions
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 4 && (
+                <CurrentHealth
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 5 && (
+                <FamilyHistory
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 6 && (
+                <SpecificConcerns
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                />
+              )}
+              {currentStep === 7 && (
+                <Attachments
+                  data={formData}
+                  onChange={handleInputChange}
+                  errors={errors}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+              
+              {submitError && (
+                <div className="mt-4 rounded-md bg-red-50 p-4">
+                  <p className="text-sm text-red-700">{submitError}</p>
+                </div>
+              )}
+            </div>
+
+            <NavigationFooter
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              onPrevious={handlePrevious}
+              onNext={currentStep === STEPS.length ? handleSubmit : handleNext}
+              onSave={() => {}}
+              isValid={Object.keys(errors).length === 0}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  // Helper functions moved to the end
+  function validateStep(step: number): boolean {
     const newErrors: FormErrors = {};
 
     switch (step) {
@@ -82,9 +199,9 @@ export function FormPage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }
 
-  const handleInputChange = (field: keyof FormData, value: any) => {
+  function handleInputChange(field: keyof FormData, value: any) {
     setFormData({ ...formData, [field]: value });
     // Clear error for the field if it exists
     if (errors[field]) {
@@ -94,15 +211,15 @@ export function FormPage() {
         return newErrors;
       });
     }
-  };
+  }
 
-  const handlePrevious = () => {
+  function handlePrevious() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
-  };
+  }
 
-  const handleNext = () => {
+  function handleNext() {
     if (validateStep(currentStep)) {
       // Mark current step as completed
       if (!completedSteps.includes(currentStep)) {
@@ -114,9 +231,9 @@ export function FormPage() {
         setCurrentStep(currentStep + 1);
       }
     }
-  };
+  }
 
-  const handleSubmit = async () => {
+  async function handleSubmit() {
     if (!validateStep(currentStep)) {
       return;
     }
@@ -191,128 +308,5 @@ export function FormPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/dashboard');
-  };
-
-  if (analysisResult) {
-    return (
-      <ResultPage
-        content={analysisResult}
-        onBack={() => setAnalysisResult(null)}
-      />
-    );
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <ClipboardList className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Oltási Mentesség Kérelem
-            </h1>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Kijelentkezés
-          </button>
-        </div>
-
-        <div className="mb-8">
-          <StepIndicator
-            steps={STEPS.map((step) => ({
-              ...step,
-              isCompleted: completedSteps.includes(step.id),
-            }))}
-            currentStep={currentStep}
-            onStepClick={setCurrentStep}
-          />
-        </div>
-
-        <div className="rounded-lg bg-white shadow">
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              {STEPS[currentStep - 1].title}
-            </h2>
-          </div>
-
-          <div className="px-6 py-6">
-            {currentStep === 1 && (
-              <BasicInformation
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 2 && (
-              <CurrentVaccination
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 3 && (
-              <PreviousReactions
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 4 && (
-              <CurrentHealth
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 5 && (
-              <FamilyHistory
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 6 && (
-              <SpecificConcerns
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-              />
-            )}
-            {currentStep === 7 && (
-              <Attachments
-                data={formData}
-                onChange={handleInputChange}
-                errors={errors}
-                isSubmitting={isSubmitting}
-              />
-            )}
-            
-            {submitError && (
-              <div className="mt-4 rounded-md bg-red-50 p-4">
-                <p className="text-sm text-red-700">{submitError}</p>
-              </div>
-            )}
-          </div>
-
-          <NavigationFooter
-            currentStep={currentStep}
-            totalSteps={STEPS.length}
-            onPrevious={handlePrevious}
-            onNext={currentStep === STEPS.length ? handleSubmit : handleNext}
-            onSave={() => {}}
-            isValid={Object.keys(errors).length === 0}
-            isSubmitting={isSubmitting}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }

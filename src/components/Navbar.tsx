@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Calendar, LogOut, Home } from 'lucide-react';
+import { FileText, Calendar, LogOut, Home, ClipboardList, FileCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export function Navbar() {
@@ -38,6 +38,30 @@ export function Navbar() {
               >
                 <Home className="h-4 w-4" />
                 <span>Főoldal</span>
+              </Link>
+              
+              <Link
+                to="/bcg-letter-generator"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/bcg-letter-generator')
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <FileCheck className="h-4 w-4" />
+                <span>BCG Levél</span>
+              </Link>
+              
+              <Link
+                to="/form"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/form')
+                    ? 'bg-green-100 text-green-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <ClipboardList className="h-4 w-4" />
+                <span>Mentességi Kérelem</span>
               </Link>
               
               <Link

@@ -42,6 +42,32 @@ export function BCGLetterGenerator() {
   const [generateError, setGenerateError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const handleInputChange = (field: keyof BCGFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleNext = () => {
+    if (currentStep < STEPS.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const generateLetter = async () => {
+    setIsGenerating(true);
+    try {
+      // Placeholder for letter generation
+      setGeneratedLetter('Generated letter content');
+    } catch (error) {
+      setGenerateError('Error generating letter');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSave = () => {

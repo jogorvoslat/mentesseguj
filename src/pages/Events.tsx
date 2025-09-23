@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Filter, Search, Copy } from 'lucide-react';
+import { Calendar, Filter, Search, Copy, Send, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 
@@ -20,6 +20,10 @@ export function Events() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [chatMessage, setChatMessage] = useState<string>('');
+  const [chatResponse, setChatResponse] = useState<string>('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -93,6 +97,39 @@ export function Events() {
     setSearchTerm('');
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatMessage.trim() || isSendingMessage) return;
+
+    try {
+      setIsSendingMessage(true);
+      setChatError(null);
+      setChatResponse('');
+
+      const response = await fetch('https://n8n-1-nasm.onrender.com/webhook/mentchat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: chatMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.text();
+      setChatResponse(data);
+      setChatMessage('');
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -135,6 +172,53 @@ export function Events() {
             <p className="text-gray-600">
               Fontos események és teendők áttekintése
             </p>
+          </div>
+
+          {/* Chat Interface */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <MessageCircle className="h-6 w-6 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Chat Asszisztens</h2>
+            </div>
+            
+            <form onSubmit={handleSendMessage} className="mb-4">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  placeholder="Írja be üzenetét..."
+                  disabled={isSendingMessage}
+                  className="flex-1 block rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                />
+                <button
+                  type="submit"
+                  disabled={!chatMessage.trim() || isSendingMessage}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSendingMessage ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* Chat Response */}
+            {chatResponse && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <h3 className="text-sm font-medium text-blue-900 mb-2">Válasz:</h3>
+                <p className="text-sm text-blue-800 whitespace-pre-wrap">{chatResponse}</p>
+              </div>
+            )}
+
+            {/* Chat Error */}
+            {chatError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-sm text-red-700">{chatError}</p>
+              </div>
+            )}
           </div>
 
           {/* Filters */}

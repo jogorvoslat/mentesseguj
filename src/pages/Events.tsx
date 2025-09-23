@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Filter, Search } from 'lucide-react';
+import { Calendar, Filter, Search, Copy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
 
@@ -19,6 +19,7 @@ export function Events() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -75,6 +76,16 @@ export function Events() {
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
+  };
+
+  const handleCopyEvent = async (eventText: string, eventId: string) => {
+    try {
+      await navigator.clipboard.writeText(eventText);
+      setCopiedId(eventId);
+      setTimeout(() => setCopiedId(null), 2000); // Reset after 2 seconds
+    } catch (error) {
+      console.error('Másolási hiba:', error);
+    }
   };
 
   const clearFilters = () => {
@@ -222,8 +233,17 @@ export function Events() {
                     {filteredEvents.map((event) => (
                       <tr key={event.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {event.esemeny}
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium text-gray-900">
+                              {event.esemeny}
+                            </div>
+                            <button
+                              onClick={() => handleCopyEvent(event.esemeny, event.id)}
+                              className="ml-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                              title="Esemény szövegének másolása"
+                            >
+                              <Copy className={`h-4 w-4 ${copiedId === event.id ? 'text-green-600' : ''}`} />
+                            </button>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

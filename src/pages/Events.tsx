@@ -121,7 +121,23 @@ export function Events() {
       }
 
       const data = await response.text();
-      setChatResponse(data);
+      
+      // Extract text from JSON response if it contains {"output":"..."}
+      let responseText = data;
+      try {
+        const jsonMatch = data.match(/\{"output":"(.+)"\}/);
+        if (jsonMatch && jsonMatch[1]) {
+          responseText = jsonMatch[1];
+        }
+      } catch (error) {
+        // If parsing fails, use the original response
+        responseText = data;
+      }
+      
+      // Replace \n\n with actual line breaks
+      responseText = responseText.replace(/\\n\\n/g, '\n\n').replace(/\\n/g, '\n');
+      
+      setChatResponse(responseText);
       setChatMessage('');
     } catch (error) {
       setChatError(error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor');
@@ -207,9 +223,11 @@ export function Events() {
 
             {/* Chat Response */}
             {chatResponse && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                <h3 className="text-sm font-medium text-blue-900 mb-2">Válasz:</h3>
-                <p className="text-sm text-blue-800 whitespace-pre-wrap">{chatResponse}</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-6 mb-4">
+                <h3 className="text-base font-semibold text-blue-900 mb-3">Válasz:</h3>
+                <div className="text-base text-blue-800 whitespace-pre-wrap leading-relaxed font-medium">
+                  {chatResponse}
+                </div>
               </div>
             )}
 

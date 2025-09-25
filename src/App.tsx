@@ -12,6 +12,18 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        await supabase.auth.getSession();
+      } catch (error) {
+        // Clear stale session if validation fails
+        await supabase.auth.signOut();
+      }
+    };
+    checkSession();
+  }, []);
+
+  useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
         // Only redirect to dashboard if user is on login page or root
@@ -72,9 +84,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        // Clear stale session if user validation fails
+        await supabase.auth.signOut();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
     getUser();
   }, []);

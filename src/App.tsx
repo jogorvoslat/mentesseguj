@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -9,16 +9,21 @@ import { Events } from './pages/Events';
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
-        navigate('/dashboard');
+        // Only redirect to dashboard if user is on login page or root
+        if (location.pathname === '/login' || location.pathname === '/') {
+          navigate('/dashboard');
+        }
+        // If user is already on a protected route, stay there
       } else if (event === 'SIGNED_OUT') {
         navigate('/login');
       }
     });
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   return (
     <Routes>

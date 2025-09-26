@@ -53,13 +53,14 @@ interface FormData {
 
 async function callGeminiAPI(data: any, retryCount = 0): Promise<Response> {
   const apiKey = 'AIzaSyDRzl44b5hNYOqyF16x3JoOHjNKRJkA-RU';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent`;
   
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
       },
       body: JSON.stringify(data),
     });
@@ -156,7 +157,15 @@ Deno.serve(async (req) => {
     const response = await callGeminiAPI(data);
     const result = await response.json();
 
-    if (!result.candidates?.[0]?.content?.parts?.[0]?.text) {
+    console.log('Gemini API response:', JSON.stringify(result, null, 2));
+
+    if (!result || !result.candidates || !Array.isArray(result.candidates) || 
+        result.candidates.length === 0 || 
+        !result.candidates[0].content || 
+        !result.candidates[0].content.parts || 
+        !Array.isArray(result.candidates[0].content.parts) ||
+        result.candidates[0].content.parts.length === 0 ||
+        !result.candidates[0].content.parts[0].text) {
       throw new Error('Érvénytelen válasz formátum');
     }
 

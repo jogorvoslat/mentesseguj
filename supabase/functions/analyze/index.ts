@@ -52,7 +52,7 @@ interface FormData {
 }
 
 async function callGeminiAPI(data: any, retryCount = 0): Promise<Response> {
-  const apiKey = 'AIzaSyAQ31lEN8AjkTrHfowUeCP1a837f_gajlY';
+  const apiKey = 'AIzaSyDRzl44b5hNYOqyF16x3JoOHjNKRJkA-RU';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
   
   try {

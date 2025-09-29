@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Filter, Search, Copy, Send, MessageCircle } from 'lucide-react';
+import { Calendar, Filter, Search, Copy, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
+import { PromptBox } from '../components/ui/chatgpt-prompt-input';
 
 interface Event {
   id: string;
@@ -20,7 +21,6 @@ export function Events() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [chatMessage, setChatMessage] = useState<string>('');
   const [chatResponse, setChatResponse] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
@@ -97,9 +97,8 @@ export function Events() {
     setSearchTerm('');
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatMessage.trim() || isSendingMessage) return;
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim() || isSendingMessage) return;
 
     try {
       setIsSendingMessage(true);
@@ -112,7 +111,7 @@ export function Events() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: chatMessage,
+          message: message,
         }),
       });
 
@@ -138,7 +137,6 @@ export function Events() {
       responseText = responseText.replace(/\\n\\n/g, '\n\n').replace(/\\n/g, '\n');
       
       setChatResponse(responseText);
-      setChatMessage('');
     } catch (error) {
       setChatError(error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor');
     } finally {
@@ -197,29 +195,13 @@ export function Events() {
               <h2 className="text-lg font-semibold text-gray-900">Chat Asszisztens</h2>
             </div>
             
-            <form onSubmit={handleSendMessage} className="mb-4">
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Írja be üzenetét..."
-                  disabled={isSendingMessage}
-                  className="flex-1 block rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                />
-                <button
-                  type="submit"
-                  disabled={!chatMessage.trim() || isSendingMessage}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSendingMessage ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </form>
+            <div className="mb-4">
+              <PromptBox 
+                onSubmit={handleSendMessage}
+                isLoading={isSendingMessage}
+                className="max-w-none"
+              />
+            </div>
 
             {/* Chat Response */}
             {chatResponse && (

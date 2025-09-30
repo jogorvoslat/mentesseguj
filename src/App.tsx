@@ -13,30 +13,16 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        await supabase.auth.getSession();
-      } catch (error) {
-        // Clear stale session if validation fails
-        await supabase.auth.signOut();
-      }
-    };
-    checkSession();
-  }, []);
-
-  useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        // Only redirect to dashboard if user is on login page or root
-        if (location.pathname === '/login' || location.pathname === '/') {
-          navigate('/dashboard');
-        }
-        // If user is already on a protected route, stay there
-      } else if (event === 'SIGNED_OUT') {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
         navigate('/login');
       }
     });
-  }, [navigate, location.pathname]);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <Routes>

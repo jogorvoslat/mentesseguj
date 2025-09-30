@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Filter, Search, Copy, MessageCircle } from 'lucide-react';
+import { Calendar, Filter, Search, Copy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Navbar } from '../components/Navbar';
-import { PromptBox } from '../components/ui/chatgpt-prompt-input';
 
 interface Event {
   id: string;
@@ -21,9 +20,6 @@ export function Events() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [chatResponse, setChatResponse] = useState<string>('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
-  const [chatError, setChatError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -97,53 +93,6 @@ export function Events() {
     setSearchTerm('');
   };
 
-  const handleSendMessage = async (message: string) => {
-    if (!message.trim() || isSendingMessage) return;
-
-    try {
-      setIsSendingMessage(true);
-      setChatError(null);
-      setChatResponse('');
-
-      const response = await fetch('https://n8n-1-nasm.onrender.com/webhook/mentchat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: message,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.text();
-      
-      // Extract text from JSON response if it contains {"output":"..."}
-      let responseText = data;
-      try {
-        const jsonMatch = data.match(/\{"output":"(.+)"\}/);
-        if (jsonMatch && jsonMatch[1]) {
-          responseText = jsonMatch[1];
-        }
-      } catch (error) {
-        // If parsing fails, use the original response
-        responseText = data;
-      }
-      
-      // Replace \n\n with actual line breaks
-      responseText = responseText.replace(/\\n\\n/g, '\n\n').replace(/\\n/g, '\n');
-      
-      setChatResponse(responseText);
-    } catch (error) {
-      setChatError(error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor');
-    } finally {
-      setIsSendingMessage(false);
-    }
-  };
-
   if (loading) {
     return (
       <>
@@ -186,39 +135,6 @@ export function Events() {
             <p className="text-gray-600">
               Fontos események és teendők áttekintése
             </p>
-          </div>
-
-          {/* Chat Interface */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <MessageCircle className="h-6 w-6 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Chat Asszisztens</h2>
-            </div>
-            
-            <div className="mb-4">
-              <PromptBox 
-                onSubmit={handleSendMessage}
-                isLoading={isSendingMessage}
-                className="max-w-none"
-              />
-            </div>
-
-            {/* Chat Response */}
-            {chatResponse && (
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-6 mb-4">
-                <h3 className="text-base font-semibold text-blue-900 mb-3">Válasz:</h3>
-                <div className="text-base text-blue-800 whitespace-pre-wrap leading-relaxed font-medium">
-                  {chatResponse}
-                </div>
-              </div>
-            )}
-
-            {/* Chat Error */}
-            {chatError && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-sm text-red-700">{chatError}</p>
-              </div>
-            )}
           </div>
 
           {/* Filters */}

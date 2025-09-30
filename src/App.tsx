@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { FormPage } from './pages/FormPage';
 import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
+import { ChatPage } from './pages/ChatPage';
 
 function App() {
   const navigate = useNavigate();
@@ -61,6 +62,14 @@ function App() {
         element={
           <ProtectedRoute>
             <BCGLetterGenerator />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <ChatPage />
           </ProtectedRoute>
         }
       />

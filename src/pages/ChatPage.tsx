@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { PromptBox } from '../components/ui/chatgpt-prompt-input';
@@ -133,9 +135,18 @@ export function ChatPage() {
                           : 'bg-gray-700 text-gray-100 mr-auto'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap break-words">
-                        {message.content}
-                      </div>
+                      {message.role === 'assistant' ? (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-100 prose-p:text-gray-100 prose-strong:text-gray-100 prose-code:text-gray-100 prose-pre:bg-gray-800 prose-pre:text-gray-100"
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap break-words">
+                          {message.content}
+                        </div>
+                      )}
                       <div
                         className={`text-xs mt-2 opacity-70 ${
                           message.role === 'user' ? 'text-blue-100' : 'text-gray-400'

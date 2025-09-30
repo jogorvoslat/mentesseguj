@@ -8,8 +8,8 @@ import { DecisionTypeStep } from '../components/BCGSteps/DecisionTypeStep';
 import { ReasoningStep } from '../components/BCGSteps/ReasoningStep';
 import { FinalDeclarationsStep } from '../components/BCGSteps/FinalDeclarationsStep';
 import { BCGResultPage } from '../components/BCGResultPage';
+import { Navbar } from '../components/Navbar';
 import { FileText } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 const STEPS: BCGFormStep[] = [
   { id: 1, title: 'I. Alapvető Adatok' },
@@ -134,11 +134,6 @@ export function BCGLetterGenerator() {
     console.log('Mentés funkció még nem implementált');
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/dashboard');
-  };
-
   if (generatedLetter) {
     return (
       <BCGResultPage
@@ -149,22 +144,18 @@ export function BCGLetterGenerator() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <FileText className="h-8 w-8 text-blue-600" />
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900">
               BCG Oltás Visszautasító Levél Generátor
             </h1>
+            <p className="mt-2 text-gray-600">
+              Töltse ki az űrlapot a hivatalos levél generálásához
+            </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Kijelentkezés
-          </button>
-        </div>
 
         <div className="mb-8">
           <StepIndicator
@@ -234,7 +225,8 @@ export function BCGLetterGenerator() {
             isSubmitting={isGenerating}
           />
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -136,12 +136,11 @@ export function ChatPage() {
                       }`}
                     >
                       {message.role === 'assistant' ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-100 prose-p:text-gray-100 prose-strong:text-gray-100 prose-code:text-gray-100 prose-pre:bg-gray-800 prose-pre:text-gray-100"
-                        >
-                          {message.content}
-                        </ReactMarkdown>
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-100 prose-p:text-gray-100 prose-strong:text-gray-100 prose-code:text-gray-100 prose-pre:bg-gray-800 prose-pre:text-gray-100">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <div className="whitespace-pre-wrap break-words">
                           {message.content}

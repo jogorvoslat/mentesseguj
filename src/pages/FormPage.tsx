@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { FormStep, FormData, FormErrors } from '../types/form';
-import { StepIndicator } from '../components/StepIndicator';
-import { NavigationFooter } from '../components/NavigationFooter';
+import { EnhancedStepIndicator } from '../components/ui/EnhancedStepIndicator';
+import { FormHeader } from '../components/ui/FormHeader';
+import { FormContainer } from '../components/ui/FormContainer';
+import { EnhancedNavigationFooter } from '../components/ui/EnhancedNavigationFooter';
 import { BasicInformation } from '../components/FormSteps/BasicInformation';
 import { CurrentVaccination } from '../components/FormSteps/CurrentVaccination';
 import { PreviousReactions } from '../components/FormSteps/PreviousReactions';
@@ -75,19 +77,18 @@ export function FormPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Oltási Mentesség Kérelem
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Töltse ki a részletes űrlapot a mentességi kérelem generálásához
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="mx-auto max-w-5xl px-4 py-8">
+          <FormHeader
+            title="Oltási Mentesség Kérelem"
+            description="Töltse ki a részletes űrlapot a mentességi kérelem generálásához"
+            icon="clipboard"
+            currentStep={currentStep}
+            totalSteps={STEPS.length}
+          />
 
-          <div className="mb-8">
-            <StepIndicator
+          <div className="mb-10">
+            <EnhancedStepIndicator
               steps={STEPS.map((step) => ({
                 ...step,
                 isCompleted: completedSteps.includes(step.id),
@@ -97,82 +98,77 @@ export function FormPage() {
             />
           </div>
 
-          <div className="rounded-lg bg-white shadow">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                {STEPS[currentStep - 1].title}
-              </h2>
-            </div>
+          <FormContainer
+            stepTitle={STEPS[currentStep - 1].title}
+            stepDescription="Kérjük, töltse ki gondosan az alábbi mezőket"
+          >
+            {currentStep === 1 && (
+              <BasicInformation
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 2 && (
+              <CurrentVaccination
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 3 && (
+              <PreviousReactions
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 4 && (
+              <CurrentHealth
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 5 && (
+              <FamilyHistory
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 6 && (
+              <SpecificConcerns
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+              />
+            )}
+            {currentStep === 7 && (
+              <Attachments
+                data={formData}
+                onChange={handleInputChange}
+                errors={errors}
+                isSubmitting={isSubmitting}
+              />
+            )}
 
-            <div className="px-6 py-6">
-              {currentStep === 1 && (
-                <BasicInformation
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 2 && (
-                <CurrentVaccination
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 3 && (
-                <PreviousReactions
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 4 && (
-                <CurrentHealth
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 5 && (
-                <FamilyHistory
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 6 && (
-                <SpecificConcerns
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                />
-              )}
-              {currentStep === 7 && (
-                <Attachments
-                  data={formData}
-                  onChange={handleInputChange}
-                  errors={errors}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-              
-              {submitError && (
-                <div className="mt-4 rounded-md bg-red-50 p-4">
-                  <p className="text-sm text-red-700">{submitError}</p>
-                </div>
-              )}
-            </div>
+            {submitError && (
+              <div className="mt-6 rounded-lg bg-red-50 border border-red-200 p-4 shadow-sm">
+                <p className="text-sm font-medium text-red-700">{submitError}</p>
+              </div>
+            )}
+          </FormContainer>
 
-            <NavigationFooter
-              currentStep={currentStep}
-              totalSteps={STEPS.length}
-              onPrevious={handlePrevious}
-              onNext={currentStep === STEPS.length ? handleSubmit : handleNext}
-              onSave={() => {}}
-              isValid={Object.keys(errors).length === 0}
-              isSubmitting={isSubmitting}
-            />
-          </div>
+          <EnhancedNavigationFooter
+            currentStep={currentStep}
+            totalSteps={STEPS.length}
+            onPrevious={handlePrevious}
+            onNext={currentStep === STEPS.length ? handleSubmit : handleNext}
+            onSave={() => {}}
+            isValid={Object.keys(errors).length === 0}
+            isSubmitting={isSubmitting}
+          />
         </div>
       </div>
     </>

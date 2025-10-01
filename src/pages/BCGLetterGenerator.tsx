@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BCGFormStep, BCGFormData, BCGFormErrors } from '../types/bcgForm';
-import { StepIndicator } from '../components/StepIndicator';
-import { NavigationFooter } from '../components/NavigationFooter';
+import { EnhancedStepIndicator } from '../components/ui/EnhancedStepIndicator';
+import { FormHeader } from '../components/ui/FormHeader';
+import { FormContainer } from '../components/ui/FormContainer';
+import { EnhancedNavigationFooter } from '../components/ui/EnhancedNavigationFooter';
 import { BasicDataStep } from '../components/BCGSteps/BasicDataStep';
 import { DecisionTypeStep } from '../components/BCGSteps/DecisionTypeStep';
 import { ReasoningStep } from '../components/BCGSteps/ReasoningStep';
@@ -146,36 +148,31 @@ export function BCGLetterGenerator() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">
-              BCG Oltás Visszautasító Levél Generátor
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Töltse ki az űrlapot a hivatalos levél generálásához
-            </p>
-          </div>
-
-        <div className="mb-8">
-          <StepIndicator
-            steps={STEPS.map((step) => ({
-              ...step,
-              isCompleted: completedSteps.includes(step.id),
-            }))}
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="mx-auto max-w-5xl px-4 py-8">
+          <FormHeader
+            title="BCG Oltás Visszautasító Levél Generátor"
+            description="Töltse ki az űrlapot a hivatalos levél generálásához"
+            icon="file"
             currentStep={currentStep}
-            onStepClick={setCurrentStep}
+            totalSteps={STEPS.length}
           />
-        </div>
 
-        <div className="rounded-lg bg-white shadow">
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              {STEPS[currentStep - 1].title}
-            </h2>
+          <div className="mb-10">
+            <EnhancedStepIndicator
+              steps={STEPS.map((step) => ({
+                ...step,
+                isCompleted: completedSteps.includes(step.id),
+              }))}
+              currentStep={currentStep}
+              onStepClick={setCurrentStep}
+            />
           </div>
 
-          <div className="px-6 py-6">
+          <FormContainer
+            stepTitle={STEPS[currentStep - 1].title}
+            stepDescription="Kérjük, töltse ki gondosan az alábbi mezőket"
+          >
             {currentStep === 1 && (
               <BasicDataStep
                 data={formData}
@@ -205,17 +202,15 @@ export function BCGLetterGenerator() {
                 isGenerating={isGenerating}
               />
             )}
-          </div>
 
-          {generateError && (
-            <div className="px-6 pb-4">
-              <div className="rounded-md bg-red-50 p-4">
-                <p className="text-sm text-red-700">{generateError}</p>
+            {generateError && (
+              <div className="mt-6 rounded-lg bg-red-50 border border-red-200 p-4 shadow-sm">
+                <p className="text-sm font-medium text-red-700">{generateError}</p>
               </div>
-            </div>
-          )}
+            )}
+          </FormContainer>
 
-          <NavigationFooter
+          <EnhancedNavigationFooter
             currentStep={currentStep}
             totalSteps={STEPS.length}
             onPrevious={handlePrevious}
@@ -224,7 +219,6 @@ export function BCGLetterGenerator() {
             isValid={Object.keys(errors).length === 0}
             isSubmitting={isGenerating}
           />
-        </div>
         </div>
       </div>
     </>

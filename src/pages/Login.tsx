@@ -22,7 +22,7 @@ export function Login() {
       });
 
       if (error) throw error;
-      navigate('/form');
+      navigate('/dashboard');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {

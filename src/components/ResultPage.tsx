@@ -1,5 +1,5 @@
-import React from 'react';
-import { Copy, Download, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy, Download, ArrowLeft, Check } from 'lucide-react';
 
 interface ResultPageProps {
   content: string;
@@ -7,9 +7,14 @@ interface ResultPageProps {
 }
 
 export const ResultPage: React.FC<ResultPageProps> = ({ content, onBack }) => {
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(false);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
+      setShowCopySuccess(true);
+      setTimeout(() => setShowCopySuccess(false), 3000);
     } catch (err) {
       console.error('Másolási hiba:', err);
     }
@@ -25,11 +30,26 @@ export const ResultPage: React.FC<ResultPageProps> = ({ content, onBack }) => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+    setShowDownloadSuccess(true);
+    setTimeout(() => setShowDownloadSuccess(false), 3000);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-4xl">
+        {(showCopySuccess || showDownloadSuccess) && (
+          <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="rounded-lg bg-green-50 p-4 shadow-lg border border-green-200">
+              <div className="flex items-center">
+                <Check className="h-5 w-5 text-green-600 mr-3" />
+                <p className="text-sm font-medium text-green-800">
+                  {showCopySuccess ? 'Sikeresen vágólapra másolva!' : 'Sikeresen letöltve!'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8 flex items-center justify-between">
           <button
             onClick={onBack}
@@ -41,14 +61,14 @@ export const ResultPage: React.FC<ResultPageProps> = ({ content, onBack }) => {
           <div className="flex gap-4">
             <button
               onClick={handleCopy}
-              className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
             >
               <Copy className="mr-2 h-4 w-4" />
               Másolás
             </button>
             <button
               onClick={handleDownload}
-              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
             >
               <Download className="mr-2 h-4 w-4" />
               Letöltés

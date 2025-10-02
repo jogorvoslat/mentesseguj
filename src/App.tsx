@@ -8,6 +8,7 @@ import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { Settings } from './pages/Settings';
 
 function App() {
   const navigate = useNavigate();
@@ -65,6 +66,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Events />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />

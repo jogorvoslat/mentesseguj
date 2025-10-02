@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Calendar, LogOut, Home, ClipboardList, FileCheck, MessageCircle, Menu, X } from 'lucide-react';
+import { FileText, Calendar, LogOut, Home, ClipboardList, FileCheck, MessageCircle, Menu, X, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export function Navbar() {
@@ -97,6 +97,14 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <Link
+              to="/privacy-policy"
+              className="hidden md:flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Adatvédelem</span>
+            </Link>
+
             <button
               onClick={handleLogout}
               className="hidden md:flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -185,6 +193,19 @@ export function Navbar() {
             >
               <Calendar className="h-5 w-5" />
               <span>Események</span>
+            </Link>
+
+            <Link
+              to="/privacy-policy"
+              onClick={closeMobileMenu}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                isActive('/privacy-policy')
+                  ? 'bg-gray-100 text-gray-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              <Shield className="h-5 w-5" />
+              <span>Adatvédelem</span>
             </Link>
 
             <button

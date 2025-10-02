@@ -7,6 +7,7 @@ import { FormPage } from './pages/FormPage';
 import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
 
 function App() {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

@@ -127,6 +127,17 @@ export function Login() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="text-center">
+              <a
+                href="/privacy-policy"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                Adatvédelmi Nyilatkozat
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

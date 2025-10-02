@@ -139,8 +139,9 @@ export function Dashboard() {
                 </h3>
                 <div className="mt-2 text-sm text-blue-700">
                   <p>
-                    Mindkét generátor hivatalos, jogi szempontból megalapozott dokumentumokat hoz létre. 
-                    A generált levelek és kérelmek azonnal használhatók hivatalos eljárásokban.
+                    A generátor segítséget nyújt hivatalos, jogi szempontból megalapozott dokumentumok létrehozásához.
+                    A generált tartalmak használata és azok jogi következményei teljes mértékben a felhasználó felelőssége.
+                    Kérjük, a dokumentumok felhasználása előtt minden esetben forduljon jogi szakértőhöz vagy ügyvédhez.
                   </p>
                 </div>
               </div>

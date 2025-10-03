@@ -8,12 +8,14 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -24,7 +26,7 @@ export function Login() {
       if (error) throw error;
       navigate('/dashboard');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      setError(error instanceof Error ? error.message : 'Hiba történt a bejelentkezés során');
     } finally {
       setLoading(false);
     }
@@ -34,17 +36,31 @@ export function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: undefined,
+        }
       });
 
       if (error) throw error;
-      setError('Please check your email for verification link');
+
+      if (data.user) {
+        if (data.session) {
+          setSuccess('Sikeres regisztráció! Átirányítás...');
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1500);
+        } else {
+          setSuccess('Sikeres regisztráció! Most már bejelentkezhet.');
+        }
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      setError(error instanceof Error ? error.message : 'Hiba történt a regisztráció során');
     } finally {
       setLoading(false);
     }
@@ -104,8 +120,14 @@ export function Login() {
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
+              <div className="rounded-md bg-red-50 p-4 border border-red-200">
                 <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+
+            {success && (
+              <div className="rounded-md bg-green-50 p-4 border border-green-200">
+                <div className="text-sm text-green-700">{success}</div>
               </div>
             )}
 

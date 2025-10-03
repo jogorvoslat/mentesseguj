@@ -9,6 +9,7 @@ import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { Settings } from './pages/Settings';
+import { AuthCallback } from './pages/AuthCallback';
 
 function App() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route
         path="/dashboard"
         element={

@@ -53,14 +53,26 @@ export function Settings() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(profile?.id || '');
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error) {
-        const { error: signOutError } = await supabase.rpc('delete_user');
+      if (!session) {
+        throw new Error('Nincs aktív munkamenet');
+      }
 
-        if (signOutError) {
-          throw new Error('A fiók törlése sikertelen. Kérjük, forduljon az ügyfélszolgálathoz.');
-        }
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'A fiók törlése sikertelen');
       }
 
       await supabase.auth.signOut();

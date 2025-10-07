@@ -16,6 +16,7 @@ import { PricingPage } from './pages/PricingPage';
 import { SuccessPage } from './pages/SuccessPage';
 import { LoginForm } from './components/auth/LoginForm';
 import { SignupForm } from './components/auth/SignupForm';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Header } from './components/Header';
 
 function App() {

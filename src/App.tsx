@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { FormPage } from './pages/FormPage';
@@ -9,7 +8,6 @@ import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { Settings } from './pages/Settings';
 import { HomePage } from './pages/HomePage';
 import { PricingPage } from './pages/PricingPage';
@@ -21,7 +19,6 @@ import { Header } from './components/Header';
 
 function App() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -36,106 +33,72 @@ function App() {
   }, [navigate]);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<SignupForm />} />
-          <Route path="/success" element={<SuccessPage />} />
-          <Route path="/*" element={
-            <>
-              <Header />
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/pricing" element={<PricingPage />} />
-              </Routes>
-            </>
-          } />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/form"
-            element={
-              <ProtectedRoute>
-                <FormPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/bcg-letter-generator"
-            element={
-              <ProtectedRoute>
-                <BCGLetterGenerator />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/events"
-            element={
-              <ProtectedRoute>
-                <Events />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className="min-h-screen bg-gray-50">
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/signup" element={<SignupForm />} />
+        <Route path="/success" element={<SuccessPage />} />
+        <Route path="/*" element={
+          <>
+            <Header />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+            </Routes>
+          </>
+        } />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/form"
+          element={
+            <ProtectedRoute>
+              <FormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bcg-letter-generator"
+          element={
+            <ProtectedRoute>
+              <BCGLetterGenerator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      </Routes>
+    </div>
   );
-}
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = React.useState(true);
-  const [user, setUser] = React.useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        // Clear stale session if user validation fails
-        await supabase.auth.signOut();
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getUser();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
 }
 
 export default App;

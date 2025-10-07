@@ -9,8 +9,14 @@ import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Settings } from './pages/Settings';
-import { AuthCallback } from './pages/AuthCallback';
+import { HomePage } from './pages/HomePage';
+import { PricingPage } from './pages/PricingPage';
+import { SuccessPage } from './pages/SuccessPage';
+import { LoginForm } from './components/auth/LoginForm';
+import { SignupForm } from './components/auth/SignupForm';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function App() {
   const navigate = useNavigate();
@@ -29,23 +35,24 @@ function App() {
   }, [navigate]);
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/form"
-        element={
-          <ProtectedRoute>
-            <FormPage />
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignupForm />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/*" element={
+            <>
+              <Header />
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+              </Routes>
+            </>
+          } />
+        </Routes>
+      </div>
+    </Router>
           </ProtectedRoute>
         }
       />

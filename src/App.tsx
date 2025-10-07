@@ -9,7 +9,7 @@ import { BCGLetterGenerator } from './pages/BCGLetterGenerator';
 import { Events } from './pages/Events';
 import { ChatPage } from './pages/ChatPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { Settings } from './pages/Settings';
 import { HomePage } from './pages/HomePage';
 import { PricingPage } from './pages/PricingPage';
@@ -17,6 +17,7 @@ import { SuccessPage } from './pages/SuccessPage';
 import { LoginForm } from './components/auth/LoginForm';
 import { SignupForm } from './components/auth/SignupForm';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { Header } from './components/Header';
 
 function App() {
   const navigate = useNavigate();
@@ -50,46 +51,58 @@ function App() {
               </Routes>
             </>
           } />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/form"
+            element={
+              <ProtectedRoute>
+                <FormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bcg-letter-generator"
+            element={
+              <ProtectedRoute>
+                <BCGLetterGenerator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <ProtectedRoute>
+                <Events />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </div>
     </Router>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/bcg-letter-generator"
-        element={
-          <ProtectedRoute>
-            <BCGLetterGenerator />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/events"
-        element={
-          <ProtectedRoute>
-            <Events />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-    </Routes>
   );
 }
 

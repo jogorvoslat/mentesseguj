@@ -1,5 +1,4 @@
 import React from 'react';
-import { EventList } from '../components/EventList';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, FileText, Users } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -72,11 +71,10 @@ export function HomePage() {
             Mentességi Folyamat Lépései
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Az alábbi események segíthetnek az oltási mentesség megszerzésében. 
-            Minden eseményhez tartozik egy konkrét teendő, amit el kell végezni.
+            Az oltási mentesség megszerzése több lépésből áll.
+            Csapatunk végigkíséri Önt a teljes folyamaton.
           </p>
         </div>
-        <EventList />
       </div>
 
       {/* CTA Section */}

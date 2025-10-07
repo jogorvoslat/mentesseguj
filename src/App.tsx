@@ -106,4 +106,36 @@ function App() {
   );
 }
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [loading, setLoading] = React.useState(true);
+  const [user, setUser] = React.useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        // Clear stale session if user validation fails
+        await supabase.auth.signOut();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getUser();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export default App;

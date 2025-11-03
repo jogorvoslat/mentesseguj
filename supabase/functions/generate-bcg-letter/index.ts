@@ -1,7 +1,7 @@
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
 interface BCGFormData {
@@ -70,7 +70,6 @@ Deno.serve(async (req) => {
       throw new Error('Érvénytelen bemeneti adatok');
     }
 
-    // Build the user prompt with all form data
     const userPrompt = `
 Kérjük, generáljon egy hivatalos, magyar nyelvű levelet a BCG oltás ${formData.refusalType === 'deferral' ? 'elhalasztásához' : 'visszautasításához'} az alábbi adatok alapján:
 
@@ -112,7 +111,7 @@ ${formData.customReason ? `\nEgyéni indoklás: ${formData.customReason}` : ''}
 ZÁRÓ NYILATKOZATOK:
 ${formData.declarations.map(declaration => {
   switch(declaration) {
-    case 'responsibilityForDeferral': return '- Nyilatkozat a későbbi oltás felelősségteljes pótlásáról';
+    case 'responsibilityForDeferral': return '- Nyilatkozat a később oltás felelősségteljes pótlásáról';
     case 'awarenessOfConsequences': return '- A lehetséges hatósági következmények tudomásulvétele';
     case 'requestForDocumentation': return '- Kérés a döntés hivatalos kórházi dokumentációjára';
     default: return `- ${declaration}`;

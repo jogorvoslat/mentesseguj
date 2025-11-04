@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { MessageCircle, Loader2, AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Loader2 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { PromptBox } from '../components/ui/chatgpt-prompt-input';
-import { supabase } from '../lib/supabase';
-import { chatService, ChatSession } from '../lib/chatService';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,55 +12,10 @@ interface Message {
 }
 
 export function ChatPage() {
-  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Initialize authentication and session
-  useEffect(() => {
-    const initializeChat = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          navigate('/login');
-          return;
-        }
-
-        setUserId(user.id);
-
-        const activeSession = await chatService.getActiveSession();
-
-        if (activeSession) {
-          setSessionId(activeSession.id);
-          const sessionMessages = await chatService.getSessionMessages(activeSession.id);
-
-          setMessages(sessionMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.created_at),
-          })));
-        } else {
-          const newSession = await chatService.createSession();
-          if (newSession) {
-            setSessionId(newSession.id);
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing chat:', error);
-        setChatError('Hiba történt a chat inicializálása közben');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeChat();
-  }, [navigate]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -71,8 +23,9 @@ export function ChatPage() {
   }, [messages]);
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || isSendingMessage || !sessionId || !userId) return;
+    if (!message.trim() || isSendingMessage) return;
 
+    // Add user message to conversation
     const userMessage: Message = {
       role: 'user',
       content: message.trim(),
@@ -84,25 +37,14 @@ export function ChatPage() {
     setChatError(null);
 
     try {
-      await chatService.saveMessage(sessionId, 'user', message.trim());
-
-      const requestBody = {
-        message: message.trim(),
-        userId,
-        sessionId,
-      };
-
-      console.log('Sending webhook request:', {
-        url: 'https://n8n-1-nasm.onrender.com/webhook/mentchat',
-        body: requestBody,
-      });
-
       const response = await fetch('https://n8n-1-nasm.onrender.com/webhook/mentchat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          message: message.trim(),
+        }),
       });
 
       if (!response.ok) {
@@ -110,9 +52,8 @@ export function ChatPage() {
       }
 
       const data = await response.text();
-
-      console.log('Webhook response:', data);
-
+      
+      // Extract text from JSON response if it contains {"output":"..."}
       let responseText = data;
       try {
         const jsonMatch = data.match(/\{"output":"(.+)"\}/);
@@ -120,54 +61,32 @@ export function ChatPage() {
           responseText = jsonMatch[1];
         }
       } catch (error) {
+        // If parsing fails, use the original response
         responseText = data;
       }
-
+      
+      // Replace \n\n with actual line breaks
       responseText = responseText.replace(/\\n\\n/g, '\n\n').replace(/\\n/g, '\n');
-
+      
+      // Add assistant response to conversation
       const assistantMessage: Message = {
         role: 'assistant',
         content: responseText,
         timestamp: new Date(),
       };
 
-      await chatService.saveMessage(sessionId, 'assistant', responseText);
-
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor';
-      console.error('Error sending message:', error);
-      setChatError(errorMessage);
+      setChatError(error instanceof Error ? error.message : 'Hiba történt az üzenet küldésekor');
     } finally {
       setIsSendingMessage(false);
     }
   };
 
-  const clearConversation = async () => {
-    if (sessionId) {
-      await chatService.closeSession(sessionId);
-      const newSession = await chatService.createSession();
-      if (newSession) {
-        setSessionId(newSession.id);
-      }
-    }
+  const clearConversation = () => {
     setMessages([]);
     setChatError(null);
   };
-
-  if (isLoading) {
-    return (
-      <>
-        <Navbar />
-        <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
-            <p>Chat betöltése...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -185,7 +104,7 @@ export function ChatPage() {
                 onClick={clearConversation}
                 className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
               >
-                Új beszélgetés
+                Beszélgetés törlése
               </button>
             )}
           </div>

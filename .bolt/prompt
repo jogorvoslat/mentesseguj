@@ -1,5 +1,6 @@
 NEVER create or use local Bolt databse or edge function!
 Supabase account is connected and integrated, so always use that!
+DO NOT create any local server function, always use supabase edge function! 
 
 For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
 

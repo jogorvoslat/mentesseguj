@@ -37,10 +37,13 @@ export function ChatPage() {
     setChatError(null);
 
     try {
-      const response = await fetch('https://n8n-1-nasm.onrender.com/webhook/mentchat', {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat-ai`;
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           message: message.trim(),
@@ -51,23 +54,9 @@ export function ChatPage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.text();
-      
-      // Extract text from JSON response if it contains {"output":"..."}
-      let responseText = data;
-      try {
-        const jsonMatch = data.match(/\{"output":"(.+)"\}/);
-        if (jsonMatch && jsonMatch[1]) {
-          responseText = jsonMatch[1];
-        }
-      } catch (error) {
-        // If parsing fails, use the original response
-        responseText = data;
-      }
-      
-      // Replace \n\n with actual line breaks
-      responseText = responseText.replace(/\\n\\n/g, '\n\n').replace(/\\n/g, '\n');
-      
+      const data = await response.json();
+      const responseText = data.output || '';
+
       // Add assistant response to conversation
       const assistantMessage: Message = {
         role: 'assistant',

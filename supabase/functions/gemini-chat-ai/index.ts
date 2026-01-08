@@ -17,7 +17,7 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
   }
 
   const model = "gemini-3-flash-preview";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const requestBody = {
     contents: [
@@ -59,27 +59,19 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
       throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
-    const text = await response.text();
-    const lines = text.trim().split("\n");
+    const data = await response.json();
 
-    let fullResponse = "";
-
-    for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        const jsonStr = line.substring(6);
-        const data = JSON.parse(jsonStr);
-
-        if (data.candidates && data.candidates[0]?.content?.parts) {
-          for (const part of data.candidates[0].content.parts) {
-            if (part.text) {
-              fullResponse += part.text;
-            }
-          }
+    if (data.candidates && data.candidates[0]?.content?.parts) {
+      let fullResponse = "";
+      for (const part of data.candidates[0].content.parts) {
+        if (part.text) {
+          fullResponse += part.text;
         }
       }
+      return fullResponse;
     }
 
-    return fullResponse;
+    throw new Error("Unexpected API response format");
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     throw error;

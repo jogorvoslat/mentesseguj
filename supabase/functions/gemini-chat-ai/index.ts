@@ -16,8 +16,8 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
     throw new Error("GEMINI_API_KEY environment variable is not set");
   }
 
-  const model = "gemini-2.0-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const model = "gemini-3-flash-preview";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}`;
 
   const requestBody = {
     contents: [
@@ -30,6 +30,11 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
         ],
       },
     ],
+    generationConfig: {
+      thinkingConfig: {
+        thinkingLevel: "HIGH",
+      },
+    },
   };
 
   try {
@@ -54,19 +59,27 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
       throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    const lines = text.trim().split("\n");
 
-    if (data.candidates && data.candidates[0]?.content?.parts) {
-      let fullResponse = "";
-      for (const part of data.candidates[0].content.parts) {
-        if (part.text) {
-          fullResponse += part.text;
+    let fullResponse = "";
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const jsonStr = line.substring(6);
+        const data = JSON.parse(jsonStr);
+
+        if (data.candidates && data.candidates[0]?.content?.parts) {
+          for (const part of data.candidates[0].content.parts) {
+            if (part.text) {
+              fullResponse += part.text;
+            }
+          }
         }
       }
-      return fullResponse;
     }
 
-    throw new Error("Unexpected API response format");
+    return fullResponse;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     throw error;

@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.39.7";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,9 +9,41 @@ const corsHeaders = {
 
 interface ChatRequest {
   message: string;
+  prompt_id?: string;
+  user_id?: string;
 }
 
-async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
+async function getSystemPrompt(user_id: string, prompt_id: string): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials not configured");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+      .from("system_prompts")
+      .select("content")
+      .eq("id", prompt_id)
+      .eq("user_id", user_id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching system prompt:", error);
+      return null;
+    }
+
+    return data?.content || null;
+  } catch (error) {
+    console.error("Error in getSystemPrompt:", error);
+    return null;
+  }
+}
+
+async function callGeminiAPI(message: string, systemPrompt?: string, retryCount = 0): Promise<string> {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY environment variable is not set");
@@ -19,17 +52,38 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
   const model = "gemini-3-flash-preview";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const requestBody = {
-    contents: [
+  const contents = [];
+
+  if (systemPrompt) {
+    contents.push({
+      role: "user",
+      parts: [
+        {
+          text: systemPrompt,
+        },
+      ],
+    });
+    contents.push({
+      role: "model",
+      parts: [
+        {
+          text: "I understand. I'll follow these instructions.",
+        },
+      ],
+    });
+  }
+
+  contents.push({
+    role: "user",
+    parts: [
       {
-        role: "user",
-        parts: [
-          {
-            text: message,
-          },
-        ],
+        text: message,
       },
     ],
+  });
+
+  const requestBody = {
+    contents,
     generationConfig: {
       thinkingConfig: {
         thinkingLevel: "HIGH",
@@ -53,7 +107,7 @@ async function callGeminiAPI(message: string, retryCount = 0): Promise<string> {
       if (response.status === 502 && retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
         await new Promise((resolve) => setTimeout(resolve, delay));
-        return callGeminiAPI(message, retryCount + 1);
+        return callGeminiAPI(message, systemPrompt, retryCount + 1);
       }
 
       throw new Error(`API error: ${response.status} - ${errorText}`);
@@ -100,7 +154,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { message }: ChatRequest = await req.json();
+    const { message, prompt_id, user_id }: ChatRequest = await req.json();
 
     if (!message || typeof message !== "string") {
       return new Response(
@@ -115,7 +169,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const response = await callGeminiAPI(message);
+    let systemPrompt: string | undefined;
+    if (prompt_id && user_id) {
+      const fetchedPrompt = await getSystemPrompt(user_id, prompt_id);
+      if (fetchedPrompt) {
+        systemPrompt = fetchedPrompt;
+      }
+    }
+
+    const response = await callGeminiAPI(message, systemPrompt);
 
     return new Response(JSON.stringify({ output: response }), {
       status: 200,

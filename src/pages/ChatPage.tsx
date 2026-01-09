@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { PromptBox } from '../components/ui/chatgpt-prompt-input';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -11,11 +12,43 @@ interface Message {
   timestamp: Date;
 }
 
+interface SystemPrompt {
+  id: string;
+  name: string;
+}
+
 export function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  const [systemPrompts, setSystemPrompts] = useState<SystemPrompt[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchSystemPrompts = async () => {
+      if (!userId) return;
+      const { data } = await supabase
+        .from('system_prompts')
+        .select('id, name')
+        .eq('user_id', userId);
+      if (data) {
+        setSystemPrompts(data);
+      }
+    };
+    fetchSystemPrompts();
+  }, [userId]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -39,15 +72,22 @@ export function ChatPage() {
     try {
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gemini-chat-ai`;
 
+      const requestBody: any = {
+        message: message.trim(),
+      };
+
+      if (userId && selectedPromptId) {
+        requestBody.user_id = userId;
+        requestBody.prompt_id = selectedPromptId;
+      }
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({
-          message: message.trim(),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -83,18 +123,37 @@ export function ChatPage() {
       <div className="min-h-screen bg-gray-900 text-white">
         <div className="mx-auto max-w-4xl flex flex-col h-screen">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700">
-            <div className="flex items-center space-x-3">
-              <MessageCircle className="h-8 w-8 text-blue-400" />
-              <h1 className="text-2xl font-bold text-white">Chat Asszisztens</h1>
+          <div className="flex flex-col p-6 border-b border-gray-700 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <MessageCircle className="h-8 w-8 text-blue-400" />
+                <h1 className="text-2xl font-bold text-white">Chat Asszisztens</h1>
+              </div>
+              {messages.length > 0 && (
+                <button
+                  onClick={clearConversation}
+                  className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+                >
+                  Beszélgetés törlése
+                </button>
+              )}
             </div>
-            {messages.length > 0 && (
-              <button
-                onClick={clearConversation}
-                className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-              >
-                Beszélgetés törlése
-              </button>
+            {systemPrompts.length > 0 && (
+              <div className="flex items-center space-x-3">
+                <label className="text-sm font-medium text-gray-300">Rendszerkérés:</label>
+                <select
+                  value={selectedPromptId || ''}
+                  onChange={(e) => setSelectedPromptId(e.target.value || null)}
+                  className="px-3 py-2 bg-gray-700 text-white rounded-md border border-gray-600 hover:border-gray-500 transition-colors text-sm"
+                >
+                  <option value="">Válasszon egy rendszerkérést</option>
+                  {systemPrompts.map((prompt) => (
+                    <option key={prompt.id} value={prompt.id}>
+                      {prompt.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 
